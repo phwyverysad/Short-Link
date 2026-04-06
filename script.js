@@ -401,8 +401,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        let lastInnerWidth = window.innerWidth;
         window.addEventListener('resize', () => {
-            if (backgrounds.length > 0) initCanvas();
+            // Prevent mobile vertical scroll (URL bar hiding) from constantly resetting canvas
+            if (window.innerWidth !== lastInnerWidth) {
+                lastInnerWidth = window.innerWidth;
+                if (backgrounds.length > 0) initCanvas();
+            }
         });
 
         function renderBackground() {
