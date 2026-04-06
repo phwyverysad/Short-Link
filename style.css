@@ -205,3 +205,10 @@ body.dark-mode .parallax-overlay {
     .header { flex-direction: column; gap: 1.5rem; } 
     .history-drawer { border-radius: 0; right: -100%; max-width: 85%; }
 }
+@media (max-width: 500px) {
+    .panel { padding: 2rem 1.5rem; border-radius: 30px; }
+    .title { font-size: 1.5rem; }
+    .capsule-input { padding: 1rem 1.2rem 1rem 3rem; }
+    .btn-glow.capsule { padding: 1rem; font-size: 1rem; }
+    .qr-frame img { width: 140px; height: 140px; }
+}
