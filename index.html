@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Short Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="parallax-bg-container">
+        <!-- Assets -->
+        <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/bg1.png" id="bg1-img" class="asset-img" crossorigin="anonymous" alt="">
+        <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/bg2.png" id="bg2-img" class="asset-img" crossorigin="anonymous" alt="">
+        <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/bg3.png" id="bg3-img" class="asset-img" crossorigin="anonymous" alt="">
+        <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/bg4.png" id="bg4-img" class="asset-img" crossorigin="anonymous" alt="">
+        <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/bg5.png" id="bg5-img" class="asset-img" crossorigin="anonymous" alt="">
+        
+        <canvas id="parallax-canvas"></canvas>
+        <div class="parallax-overlay"></div>
+    </div>
+    <img src="https://raw.githubusercontent.com/hsyeon603/running-santa/main/assets/flyingpig.gif" id="flying-pig" class="flying-pig" alt="">
+
+    <header class="header slide-down">
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-link"></i></div>
+            Short<span>Link</span>
+        </div>
+        <div class="header-actions">
+            <button id="history-btn" class="btn-capsule" title="ประวัติการย่อลิงก์">
+                <i class="fa-solid fa-layer-group"></i> <span>ประวัติของคุณ</span>
+            </button>
+            <a href="https://github.com/phwyverysad" target="_blank" class="btn-capsule btn-icon" title="Visit my GitHub">
+                <i class="fa-brands fa-github"></i>
+            </a>
+            <button id="theme-toggle" class="btn-capsule btn-icon" title="เปลี่ยนธีม">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="main-wrapper fade-in-up">
+        <div class="app-container" id="app-container">
+            
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h1 class="title">ย่อลิ้งก์ให้สั้น (Short Link)</h1>
+                    <p class="subtitle">10 ผู้ให้บริการฟรี ใช้งานง่าย</p>
+                </div>
+
+                <div class="form-group">
+                    <label>ผู้ให้บริการ API</label>
+                    <div class="custom-dropdown" id="api-dropdown">
+                        <div class="dropdown-header capsule-input" id="dropdown-header">
+                            <div class="header-content">
+                                <i class="fa-solid fa-server icon"></i>
+                                <span id="selected-api-text">is.gd (เร็ว & ตั้งชื่อได้)</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down caret"></i>
+                        </div>
+                        <ul class="dropdown-list" id="dropdown-list">
+                            <li class="dropdown-item selected" data-value="isgd" data-type="custom">is.gd <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="spoome" data-type="custom">spoo.me <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="1pt" data-type="custom">1pt.co <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="vgd" data-type="custom">v.gd <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="dagd" data-type="custom">da.gd <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="ulvis" data-type="custom">ulvis.net <span class="badge">ตั้งชื่อได้</span></li>
+                            <li class="dropdown-item" data-value="tinyurl" data-type="random">TinyURL <span class="badge random">สุ่มเท่านั้น</span></li>
+                            <li class="dropdown-item" data-value="cleanuri" data-type="random">CleanURI <span class="badge random">สุ่มเท่านั้น</span></li>
+                            <li class="dropdown-item" data-value="gotiny" data-type="random">GoTiny.cc <span class="badge random">สุ่มเท่านั้น</span></li>
+                            <li class="dropdown-item" data-value="clckru" data-type="random">clck.ru <span class="badge random">สุ่มเท่านั้น</span></li>
+                        </ul>
+                    </div>
+                    <input type="hidden" id="api-provider" value="isgd">
+                </div>
+
+                <div class="form-group">
+                    <label>ลิงก์ต้นฉบับ</label>
+                    <div class="input-box">
+                        <i class="fa-solid fa-link icon"></i>
+                        <input type="url" id="long-url" class="capsule-input" placeholder="https://your-url.com/..." required>
+                    </div>
+                </div>
+
+                <div class="options-container capsule-options">
+                    <label class="radio-label" id="random-label">
+                        <input type="radio" name="alias-type" value="random" checked>
+                        <div class="radio-box capsule">
+                            <i class="fa-solid fa-shuffle"></i> <span>สุ่มออโต้</span>
+                        </div>
+                    </label>
+                    <label class="radio-label" id="custom-radio-container">
+                        <input type="radio" name="alias-type" value="custom">
+                        <div class="radio-box capsule">
+                            <i class="fa-solid fa-pen-nib"></i> <span>ตั้งชื่อเอง</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="form-group custom-alias-group" id="custom-alias-container">
+                    <div class="input-box">
+                        <i class="fa-solid fa-at icon"></i>
+                        <input type="text" id="custom-alias" class="capsule-input" placeholder="ตั้งชื่อที่ต้องการ (เช่น my-shop)">
+                    </div>
+                </div>
+
+                <button id="shorten-btn" class="btn-glow capsule">
+                    <span class="btn-text">สร้างลิงก์</span>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <div class="spinner" id="btn-loader"></div>
+                </button>
+            </div>
+
+            <div class="panel result-panel hidden" id="result-container">
+                <div class="success-badge capsule">
+                    <i class="fa-solid fa-check-circle"></i> ลิงก์พร้อมใช้งานแล้ว!
+                </div>
+                
+                <div class="result-box">
+                    <div class="link-display-capsule">
+                        <a href="#" id="short-url" class="short-url-text" target="_blank"></a>
+                        <button id="copy-btn" class="btn-copy capsule" title="คัดลอก">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="qr-showcase">
+                    <div class="qr-frame"><img id="qr-code" src="" alt="QR Code" crossorigin="anonymous"></div>
+                    <button id="download-qr-btn" class="btn-outline capsule">
+                        <i class="fa-solid fa-download"></i> โหลด QR Code
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <aside class="history-drawer" id="history-drawer">
+        <div class="drawer-header">
+            <h2><i class="fa-solid fa-history"></i> ประวัติของคุณ</h2>
+            <button class="btn-close-drawer btn-icon capsule" id="close-drawer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-content" id="history-list"></div>
+        <div class="drawer-detail hidden" id="history-detail">
+            <button class="btn-back capsule" id="back-to-list"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
+            <div class="detail-card">
+                <div class="qr-frame small-qr"><img id="hist-qr" src="" alt="QR"></div>
+                <button id="hist-download-qr" class="btn-outline capsule sm mt-1">โหลดรูป</button>
+                <div class="detail-links">
+                    <label>ลิงก์ที่ย่อแล้ว:</label>
+                    <a href="#" id="hist-short" class="highlight-link" target="_blank"></a>
+                    <label>ลิงก์ต้นฉบับ:</label>
+                    <a href="#" id="hist-original" class="dim-link" target="_blank"></a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div id="toast" class="toast capsule"></div>
+    <script src="script.js"></script>
+</body>
+</html>
