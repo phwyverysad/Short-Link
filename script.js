@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const body = document.body;
     const themeToggleBtn = document.getElementById('theme-toggle');
-    const themeIcon = themeToggleBtn.querySelector('i');
+    const themeIcon = themeToggleBtn ? themeToggleBtn.querySelector('i') : null;
     
     // Custom Dropdown Elements
     const dropdown = document.getElementById('api-dropdown');
@@ -43,28 +43,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('history-list');
     const historyDetail = document.getElementById('history-detail');
 
+    // --- Toast Function (Define early) ---
+    let toastTimeout;
+    const showToast = (message, type = 'success') => {
+        const toast = document.getElementById('toast');
+        if (!toast) {
+            console.error('Toast element not found');
+            return;
+        }
+        toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> <span>${message}</span>`;
+        toast.className = `toast capsule show ${type}`;
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+    };
+
     // --- Theme Logic ---
     if (localStorage.getItem('theme') === 'dark') {
         body.classList.add('dark-mode');
-        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
     }
-    themeToggleBtn.addEventListener('click', () => {
-        themeToggleBtn.classList.add('pop-anim');
-        setTimeout(() => themeToggleBtn.classList.remove('pop-anim'), 300);
-        
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
-    });
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            themeToggleBtn.classList.add('pop-anim');
+            setTimeout(() => themeToggleBtn.classList.remove('pop-anim'), 300);
+            
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            if (themeIcon) themeIcon.classList.replace(isDark ? 'fa-moon' : 'fa-sun', isDark ? 'fa-sun' : 'fa-moon');
+        });
+    }
 
     // --- Custom Dropdown ---
-    dropdownItems.forEach((item, index) => item.style.setProperty('--i', index));
-    dropdownHeader.addEventListener('click', () => {
-        dropdown.classList.toggle('open');
-        dropdownHeader.classList.add('pop-anim');
-        setTimeout(() => dropdownHeader.classList.remove('pop-anim'), 300);
-    });
+    if (dropdownItems.length > 0) {
+        dropdownItems.forEach((item, index) => item.style.setProperty('--i', index));
+    }
+    if (dropdownHeader) {
+        dropdownHeader.addEventListener('click', () => {
+            if (dropdown) dropdown.classList.toggle('open');
+            dropdownHeader.classList.add('pop-anim');
+            setTimeout(() => dropdownHeader.classList.remove('pop-anim'), 300);
+        });
+    }
 
     document.addEventListener('click', (e) => {
         if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
@@ -117,78 +137,78 @@ document.addEventListener('DOMContentLoaded', () => {
     radioRandom.addEventListener('change', toggleCustomInput);
     radioCustom.addEventListener('change', toggleCustomInput);
 
-    // --- Toast ---
-    let toastTimeout;
-    const showToast = (message, type = 'success') => {
-        const toast = document.getElementById('toast');
-        toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> <span>${message}</span>`;
-        toast.className = `toast capsule show ${type}`;
-        clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
-    };
-
     // --- API Core ---
     const callShortenerAPI = async (provider, url, alias) => {
         let apiUrl, res, data;
         const eUrl = encodeURIComponent(url);
         const eAlias = alias ? encodeURIComponent(alias) : '';
+        const timeout = 10000;
+
+        const fetchWithTimeout = (url, options = {}) => {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeout))
+            ]);
+        };
 
         try {
             switch (provider) {
                 case 'isgd':
                     apiUrl = `https://is.gd/create.php?format=json&url=${eUrl}${alias ? '&shorturl='+eAlias : ''}`;
-                    res = await fetch(apiUrl); data = await res.json();
+                    res = await fetchWithTimeout(apiUrl);
+                    if (!res.ok) throw new Error('is.gd API error');
+                    data = await res.json();
                     if (data.errorcode) throw new Error('ชื่อนี้ถูกใช้งานแล้ว หรือลิงก์ผิดพลาด');
+                    if (!data.shorturl) throw new Error('Invalid response from is.gd');
                     return data.shorturl;
                 case 'vgd':
                     apiUrl = `https://v.gd/create.php?format=json&url=${eUrl}${alias ? '&shorturl='+eAlias : ''}`;
-                    res = await fetch(apiUrl); data = await res.json();
+                    res = await fetchWithTimeout(apiUrl);
+                    if (!res.ok) throw new Error('v.gd API error');
+                    data = await res.json();
                     if (data.errorcode) throw new Error('เกิดข้อผิดพลาดกับ v.gd');
+                    if (!data.shorturl) throw new Error('Invalid response from v.gd');
                     return data.shorturl;
                 case 'spoome':
                     const fd = new URLSearchParams({ url: url });
                     if (alias) fd.append('alias', alias);
-                    res = await fetch('https://spoo.me/', { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd });
+                    res = await fetchWithTimeout('https://spoo.me/', { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd });
+                    if (!res.ok) throw new Error('ผิดพลาด (spoo.me)');
                     data = await res.json();
-                    if (!res.ok) throw new Error(data.error || 'ผิดพลาด (spoo.me)');
+                    if (data.error) throw new Error(data.error);
+                    if (!data.short_url) throw new Error('Invalid response from spoo.me');
                     return data.short_url;
-                case '1pt':
-                    apiUrl = `https://api.1pt.co/addURL?long=${eUrl}${alias ? '&short='+eAlias : ''}`;
-                    res = await fetch(apiUrl); data = await res.json();
-                    if (data.status !== 201) throw new Error('ชื่อซ้ำ (1pt.co)');
-                    return `https://1pt.co/${data.short}`;
                 case 'dagd': 
-                    res = await fetch(`https://da.gd/s?url=${eUrl}${alias ? '&shorturl='+eAlias : ''}`); 
+                    res = await fetchWithTimeout(`https://da.gd/s?url=${eUrl}${alias ? '&shorturl='+eAlias : ''}`);
+                    if (!res.ok) throw new Error('da.gd API error');
                     const dagdText = await res.text();
-                    if (!dagdText || dagdText.includes('error')) throw new Error('ชื่อซ้ำ หรือลิงก์ยาวไป (da.gd)');
+                    if (!dagdText || dagdText.trim().length === 0 || /error|too long|invalid/i.test(dagdText.trim())) throw new Error('ชื่อซ้ำ หรือลิงก์ยาวไป (da.gd)');
                     return dagdText.trim();
-                case 'ulvis': 
-                    res = await fetch(`https://ulvis.net/api.php?url=${eUrl}${alias ? '&custom='+eAlias : ''}`);
-                    const ulvisText = await res.text();
-                    if (ulvisText.includes('Error')) throw new Error('ชื่อซ้ำ (ulvis.net)');
-                    return ulvisText.trim();
                 case 'tinyurl':
-                    res = await fetch(`https://tinyurl.com/api-create.php?url=${eUrl}`);
+                    res = await fetchWithTimeout(`https://tinyurl.com/api-create.php?url=${eUrl}`);
                     if (!res.ok) throw new Error('TinyURL Server Error');
-                    return await res.text();
+                    const tinyText = await res.text();
+                    if (!tinyText || tinyText.length === 0) throw new Error('TinyURL returned empty response');
+                    return tinyText.trim();
                 case 'cleanuri':
-                    res = await fetch('https://cleanuri.com/api/v1/shorten', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `url=${eUrl}` });
+                    res = await fetchWithTimeout('https://corsproxy.io/?https://cleanuri.com/api/v1/shorten', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `url=${eUrl}` });
+                    if (!res.ok) throw new Error('CleanURI API error');
                     data = await res.json();
                     if (data.error) throw new Error('CleanURI ไม่รองรับลิงก์นี้');
+                    if (!data.result_url) throw new Error('Invalid response from CleanURI');
                     return data.result_url;
                 case 'gotiny':
-                    res = await fetch('https://gotiny.cc/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: url }) });
+                    res = await fetchWithTimeout('https://corsproxy.io/?https://gotiny.cc/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: url }) });
+                    if (!res.ok) throw new Error('GoTiny API error');
                     data = await res.json();
-                    if (!data || !data[0]) throw new Error('GoTiny Error');
+                    if (!data || !Array.isArray(data) || !data[0] || !data[0].code) throw new Error('GoTiny Error');
                     return `https://gotiny.cc/${data[0].code}`;
-                case 'clckru': 
-                    res = await fetch(`https://clck.ru/--?url=${eUrl}`);
-                    return await res.text();
                 default:
                     throw new Error('Unknown Provider');
             }
         } catch (err) {
-            if (err.message === 'Failed to fetch') throw new Error(`เครือข่ายบล็อกการเชื่อมต่อ API (${provider}) ให้ลองเจ้าอื่น`);
+            if (err.message === 'Failed to fetch' || err.message === 'Timeout') throw new Error(`เครือข่ายบล็อกการเชื่อมต่อ API (${provider}) ให้ลองเจ้าอื่น`);
+            if (err instanceof TypeError && err.message.includes('Failed')) throw new Error(`เครือข่ายบล็อกการเชื่อมต่อ API (${provider}) ให้ลองเจ้าอื่น`);
             throw err;
         }
     };
@@ -204,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCustom && !alias) return showToast('กรุณาระบุชื่อที่ต้องการ', 'error');
 
         shortenBtn.disabled = true;
-        document.querySelector('.btn-text').style.display = 'none';
+        shortenBtn.querySelector('.btn-text').style.display = 'none';
         shortenBtn.querySelector('.fa-wand-magic-sparkles').style.display = 'none';
         document.getElementById('btn-loader').style.display = 'block';
 
@@ -229,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(error.message, 'error');
         } finally {
             shortenBtn.disabled = false;
-            document.querySelector('.btn-text').style.display = 'inline';
+            shortenBtn.querySelector('.btn-text').style.display = 'inline';
             shortenBtn.querySelector('.fa-wand-magic-sparkles').style.display = 'inline';
             document.getElementById('btn-loader').style.display = 'none';
         }
@@ -249,22 +269,39 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => this.classList.remove('pop-anim'), 300);
         try {
             const res = await fetch(qrCodeImg.src);
-            const blobUrl = window.URL.createObjectURL(await res.blob());
+            const blob = await res.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl; 
             const tail = shortUrlDisplay.textContent.split('/').pop() || 'qr';
             a.download = `QR-${tail}.png`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        } catch(e) { showToast('โหลดภาพไม่สำเร็จ', 'error'); }
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch(e) {
+            showToast('โหลดภาพไม่สำเร็จ', 'error');
+        }
     });
 
     // --- History Drawer ---
-    const getHistory = () => JSON.parse(localStorage.getItem('sleekCapsuleHistory')) || [];
+    const getHistory = () => {
+        try {
+            return JSON.parse(localStorage.getItem('sleekCapsuleHistory')) || [];
+        } catch (e) {
+            console.error('Error parsing history:', e);
+            return [];
+        }
+    };
     const saveToHistory = (orig, short, qr) => {
-        const hist = getHistory();
-        hist.unshift({ id: Date.now(), orig, short, qr, date: new Date().toLocaleString('th-TH') });
-        if (hist.length > 50) hist.pop();
-        localStorage.setItem('sleekCapsuleHistory', JSON.stringify(hist));
+        try {
+            const hist = getHistory();
+            hist.unshift({ id: Date.now(), orig, short, qr, date: new Date().toLocaleString('th-TH') });
+            if (hist.length > 50) hist.pop();
+            localStorage.setItem('sleekCapsuleHistory', JSON.stringify(hist));
+        } catch (e) {
+            console.error('Error saving history:', e);
+        }
     };
 
     const renderHistory = () => {
@@ -309,21 +346,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 const histShort = document.getElementById('hist-short').textContent;
                 const tail = histShort.split('/').pop() || 'qr';
                 const res = await fetch(qrImgSrc);
-                const blobUrl = window.URL.createObjectURL(await res.blob());
+                const blob = await res.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = blobUrl; 
                 a.download = `QR-${tail}.png`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            } catch(e) { showToast('โหลดภาพไม่สำเร็จ', 'error'); }
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch(e) {
+                showToast('โหลดภาพไม่สำเร็จ', 'error');
+            }
         });
     }
 
-    const closeDrawer = () => { historyDrawer.classList.remove('show'); drawerOverlay.classList.remove('show'); };
-    document.getElementById('close-drawer').addEventListener('click', closeDrawer);
+    const closeDrawer = () => {
+        historyDrawer.classList.remove('show');
+        drawerOverlay.classList.remove('show');
+    };
+    
+    const closeDrawerBtn = document.getElementById('close-drawer');
+    if (closeDrawerBtn) {
+        closeDrawerBtn.addEventListener('click', closeDrawer);
+    }
     drawerOverlay.addEventListener('click', closeDrawer);
-    document.getElementById('back-to-list').addEventListener('click', () => {
-        historyDetail.classList.add('hidden'); historyList.classList.remove('hidden');
-    });
+    
+    const backToListBtn = document.getElementById('back-to-list');
+    if (backToListBtn) {
+        backToListBtn.addEventListener('click', () => {
+            historyDetail.classList.add('hidden');
+            historyList.classList.remove('hidden');
+        });
+    }
 
     // --- Parallax Background & Flying Pig ---
     const canvas = document.getElementById('parallax-canvas');
@@ -375,10 +430,11 @@ document.addEventListener('DOMContentLoaded', () => {
         function initCanvas() {
             canvas.width = window.innerWidth * dpr;
             canvas.height = window.innerHeight * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.imageSmoothingEnabled = false;
 
             if (backgrounds.length === 0) {
-                backgrounds = imgs.map(bg => new Background(document.getElementById(bg.id), bg.speed * dpr));
+                backgrounds = imgs.map(bg => new Background(document.getElementById(bg.id), bg.speed));
             } else {
                 backgrounds.forEach(bg => bg.resize());
             }
@@ -398,8 +454,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 checkLoaded();
             } else {
                 el.addEventListener('load', checkLoaded);
+                el.addEventListener('error', () => {
+                    console.warn(`Failed to load ${bg.id}, continuing anyway`);
+                    checkLoaded();
+                });
             }
         });
+
+        // Timeout for background loading
+        setTimeout(() => {
+            if (imagesLoaded < imgs.length) {
+                console.warn('Background images timeout, proceeding with available images');
+                while (imagesLoaded < imgs.length) {
+                    checkLoaded();
+                }
+            }
+        }, 3000);
 
         let lastInnerWidth = window.innerWidth;
         window.addEventListener('resize', () => {
