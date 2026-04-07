@@ -110,7 +110,9 @@
             </div>
 
             <div class="panel result-panel hidden" id="result-container">
-                <div class="success-badge capsule">
+                <button id="btn-reset-main" class="btn-back capsule" style="position: absolute; top: 1.5rem; left: 1.5rem; z-index: 10;"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
+                
+                <div class="success-badge capsule" style="margin-top: 1rem;">
                     <i class="fa-solid fa-check-circle"></i> ลิงก์พร้อมใช้งานแล้ว!
                 </div>
                 
@@ -138,6 +140,17 @@
         <div class="drawer-header">
             <h2><i class="fa-solid fa-history"></i> ประวัติของคุณ</h2>
         </div>
+        <div class="drawer-toolbar" id="drawer-toolbar">
+            <div class="input-box hist-search-box">
+                <i class="fa-solid fa-magnifying-glass icon"></i>
+                <input type="text" id="hist-search" class="capsule-input" placeholder="ค้นหาประวัติ...">
+            </div>
+            <button id="btn-toggle-delete" class="btn-icon square-btn" title="เลือกเพื่อลบ"><i class="fa-solid fa-list-check"></i></button>
+        </div>
+        <div class="drawer-bulk-actions hidden" id="bulk-actions">
+            <button id="btn-delete-selected" class="btn-outline capsule sm danger-btn"><i class="fa-solid fa-trash"></i> ลบ (<span id="delete-count">0</span>)</button>
+            <button id="btn-cancel-delete" class="btn-outline capsule sm">ยกเลิก</button>
+        </div>
         <div class="drawer-content" id="history-list"></div>
         <div class="drawer-detail hidden" id="history-detail">
             <button class="btn-back capsule" id="back-to-list"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
@@ -153,8 +166,8 @@
                         <button id="copy-hist-short" class="btn-copy capsule sm-copy" title="คัดลอก"><i class="fa-regular fa-copy"></i></button>
                     </div>
                     <label>ลิงก์ต้นฉบับ:</label>
-                    <div class="hist-link-box">
-                        <a href="#" id="hist-original" class="dim-link" target="_blank"></a>
+                    <div class="hist-link-box original-box">
+                        <a href="#" id="hist-original" class="dim-link scroll-link" target="_blank"></a>
                         <button id="copy-hist-original" class="btn-copy capsule sm-copy" title="คัดลอก"><i class="fa-regular fa-copy"></i></button>
                     </div>
                 </div>
