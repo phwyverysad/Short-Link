@@ -284,6 +284,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const btnResetMain = document.getElementById('btn-reset-main');
+    if (btnResetMain) {
+        btnResetMain.addEventListener('click', () => {
+            btnResetMain.classList.add('pop-anim');
+            setTimeout(() => btnResetMain.classList.remove('pop-anim'), 300);
+            
+            // Remove expanded layout and fade out
+            appContainer.classList.remove('expanded');
+            resultContainer.classList.add('hidden');
+            resultContainer.classList.remove('fade-in-up');
+            
+            // Clear input
+            document.getElementById('long-url').value = '';
+            if (customAliasInput) customAliasInput.value = '';
+        });
+    }
+
     // --- History Drawer ---
     const getHistory = () => {
         try {
@@ -295,39 +312,116 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const saveToHistory = (orig, short, qr) => {
         try {
-            const hist = getHistory();
+            let hist = getHistory();
+            hist = hist.filter(item => item.orig !== orig);
             hist.unshift({ id: Date.now(), orig, short, qr, date: new Date().toLocaleString('th-TH') });
-            if (hist.length > 50) hist.pop();
+            if (hist.length > 50) hist.length = 50;
             localStorage.setItem('sleekCapsuleHistory', JSON.stringify(hist));
         } catch (e) {
             console.error('Error saving history:', e);
         }
     };
 
-    const renderHistory = () => {
-        const hist = getHistory();
+    let isDeleteMode = false;
+    let selectedIds = new Set();
+    const drawerToolbar = document.getElementById('drawer-toolbar');
+    const bulkActions = document.getElementById('bulk-actions');
+    const histSearch = document.getElementById('hist-search');
+    const deleteCount = document.getElementById('delete-count');
+
+    const renderHistory = (searchTerm = '') => {
+        let hist = getHistory();
+        if (searchTerm) {
+            hist = hist.filter(item => item.short.toLowerCase().includes(searchTerm.toLowerCase()) || item.orig.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
         historyList.innerHTML = hist.length ? '' : '<p style="text-align:center; opacity:0.5; margin-top:2rem;">ไม่มีประวัติ</p>';
         hist.forEach((item, i) => {
             const div = document.createElement('div');
             div.className = 'history-card';
             div.style.animationDelay = `${i * 0.05}s`;
-            div.innerHTML = `<p class="h-short">${item.short}</p><p class="h-orig">${item.orig}</p>`;
-            div.onclick = () => {
+            div.innerHTML = `
+                <input type="checkbox" class="history-checkbox" value="${item.id}" ${selectedIds.has(item.id.toString()) ? 'checked' : ''}>
+                <div class="history-info">
+                    <p class="h-short">${item.short}</p>
+                    <p class="h-orig">${item.orig}</p>
+                    <p class="h-date"><i class="fa-regular fa-clock"></i> ${item.date || 'ไม่มีข้อมูลวันที่'}</p>
+                </div>
+            `;
+            div.onclick = (e) => {
+                if (isDeleteMode) {
+                    const cb = div.querySelector('.history-checkbox');
+                    if (e.target !== cb) cb.checked = !cb.checked;
+                    if (cb.checked) selectedIds.add(cb.value);
+                    else selectedIds.delete(cb.value);
+                    deleteCount.textContent = selectedIds.size;
+                    return;
+                }
+                
                 document.getElementById('hist-original').textContent = item.orig;
                 document.getElementById('hist-original').href = item.orig;
                 document.getElementById('hist-short').textContent = item.short;
                 document.getElementById('hist-short').href = item.short;
                 document.getElementById('hist-qr').src = `https://quickchart.io/qr?size=400&margin=1&text=${encodeURIComponent(item.short)}`;
+                drawerToolbar.classList.add('hidden');
                 historyList.classList.add('hidden');
                 historyDetail.classList.remove('hidden');
+                
+                // Trigger Animation
+                const dCard = document.querySelector('.detail-card');
+                dCard.classList.remove('detail-anim');
+                void dCard.offsetWidth; // trigger reflow
+                dCard.classList.add('detail-anim');
             };
             historyList.appendChild(div);
         });
     };
 
+    if (histSearch) histSearch.addEventListener('input', e => renderHistory(e.target.value));
+
+    const toggleDeleteMode = (mode) => {
+        isDeleteMode = mode;
+        if (isDeleteMode) {
+            document.body.classList.add('delete-mode');
+            drawerToolbar.classList.add('hidden');
+            bulkActions.classList.remove('hidden');
+            selectedIds.clear();
+            deleteCount.textContent = '0';
+            renderHistory(histSearch ? histSearch.value : '');
+        } else {
+            document.body.classList.remove('delete-mode');
+            drawerToolbar.classList.remove('hidden');
+            bulkActions.classList.add('hidden');
+            selectedIds.clear();
+            renderHistory(histSearch ? histSearch.value : '');
+        }
+    };
+
+    const btnToggleDelete = document.getElementById('btn-toggle-delete');
+    if (btnToggleDelete) btnToggleDelete.addEventListener('click', () => toggleDeleteMode(true));
+
+    const btnCancelDelete = document.getElementById('btn-cancel-delete');
+    if (btnCancelDelete) btnCancelDelete.addEventListener('click', () => toggleDeleteMode(false));
+
+    const btnDeleteSelected = document.getElementById('btn-delete-selected');
+    if (btnDeleteSelected) {
+        btnDeleteSelected.addEventListener('click', () => {
+            if (selectedIds.size === 0) return showToast('กรุณาเลือกรายการที่ต้องการลบ', 'error');
+            const hist = getHistory().filter(item => !selectedIds.has(item.id.toString()));
+            localStorage.setItem('sleekCapsuleHistory', JSON.stringify(hist));
+            showToast(`ลบ ${selectedIds.size} รายการแล้ว`, 'success');
+            toggleDeleteMode(false);
+        });
+    }
+
     historyBtn.addEventListener('click', () => {
         historyBtn.classList.add('pop-anim');
         setTimeout(() => historyBtn.classList.remove('pop-anim'), 300);
+        isDeleteMode = false;
+        selectedIds.clear();
+        document.body.classList.remove('delete-mode');
+        if (histSearch) histSearch.value = '';
+        if (drawerToolbar) drawerToolbar.classList.remove('hidden');
+        if (bulkActions) bulkActions.classList.add('hidden');
         renderHistory();
         historyList.classList.remove('hidden');
         historyDetail.classList.add('hidden');
@@ -400,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (backToListBtn) {
         backToListBtn.addEventListener('click', () => {
             historyDetail.classList.add('hidden');
+            if (drawerToolbar && !isDeleteMode) drawerToolbar.classList.remove('hidden');
             historyList.classList.remove('hidden');
         });
     }
