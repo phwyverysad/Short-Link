@@ -361,6 +361,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // History Copy Buttons
+    const copyToClipboard = (text, btnElement) => {
+        navigator.clipboard.writeText(text);
+        btnElement.classList.add('pop-anim');
+        setTimeout(() => btnElement.classList.remove('pop-anim'), 300);
+        btnElement.innerHTML = '<i class="fa-solid fa-check"></i>';
+        showToast('คัดลอกลิงก์แล้ว', 'success');
+        setTimeout(() => btnElement.innerHTML = '<i class="fa-regular fa-copy"></i>', 2000);
+    };
+
+    const copyHistShortBtn = document.getElementById('copy-hist-short');
+    if (copyHistShortBtn) {
+        copyHistShortBtn.addEventListener('click', function() {
+            copyToClipboard(document.getElementById('hist-short').textContent, this);
+        });
+    }
+
+    const copyHistOrigBtn = document.getElementById('copy-hist-original');
+    if (copyHistOrigBtn) {
+        copyHistOrigBtn.addEventListener('click', function() {
+            copyToClipboard(document.getElementById('hist-original').textContent, this);
+        });
+    }
+
     const closeDrawer = () => {
         historyDrawer.classList.remove('show');
         drawerOverlay.classList.remove('show');
