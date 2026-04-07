@@ -181,7 +181,8 @@ body.dark-mode .parallax-overlay {
 .hist-search-box input { padding: 0.8rem 1rem 0.8rem 2.8rem; font-size: 0.95rem; }
 .square-btn { border-radius: 14px; padding: 0; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.3s; cursor: pointer; color: var(--text-main); }
 .square-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3); }
-.drawer-bulk-actions { padding: 1rem 2rem; background: rgba(239, 68, 68, 0.05); border-bottom: 1px solid var(--input-border); display: flex; gap: 1rem; align-items: center; }
+.drawer-bulk-actions { padding: 0.7rem 1.5rem; background: rgba(239, 68, 68, 0.05); border-bottom: 1px solid var(--input-border); display: flex; gap: 0.6rem; align-items: center; flex-wrap: nowrap; overflow-x: auto; }
+.drawer-bulk-actions .btn-outline.capsule.sm { padding: 0.45rem 0.9rem !important; font-size: 0.8rem !important; white-space: nowrap; flex-shrink: 0; }
 .drawer-bulk-actions.hidden { display: none; }
 .danger-btn { background: var(--danger) !important; color: white !important; border-color: var(--danger) !important; }
 .square-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
