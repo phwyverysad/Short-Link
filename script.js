@@ -413,6 +413,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const btnDeleteAll = document.getElementById('btn-delete-all');
+    if (btnDeleteAll) {
+        btnDeleteAll.addEventListener('click', () => {
+            const total = getHistory().length;
+            if (total === 0) return showToast('ไม่มีประวัติให้ลบ', 'error');
+            localStorage.removeItem('sleekCapsuleHistory');
+            showToast(`ลบประวัติทั้งหมด ${total} รายการแล้ว`, 'success');
+            toggleDeleteMode(false);
+        });
+    }
+
     historyBtn.addEventListener('click', () => {
         historyBtn.classList.add('pop-anim');
         setTimeout(() => historyBtn.classList.remove('pop-anim'), 300);
