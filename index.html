@@ -137,19 +137,26 @@
     <aside class="history-drawer" id="history-drawer">
         <div class="drawer-header">
             <h2><i class="fa-solid fa-history"></i> ประวัติของคุณ</h2>
-            <button class="btn-close-drawer btn-icon capsule" id="close-drawer"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="drawer-content" id="history-list"></div>
         <div class="drawer-detail hidden" id="history-detail">
             <button class="btn-back capsule" id="back-to-list"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับ</button>
             <div class="detail-card">
-                <div class="qr-frame small-qr"><img id="hist-qr" src="" alt="QR"></div>
-                <button id="hist-download-qr" class="btn-outline capsule sm mt-1">โหลดรูป</button>
+                <div class="hist-qr-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div class="qr-frame small-qr"><img id="hist-qr" src="" alt="QR"></div>
+                    <button id="hist-download-qr" class="btn-outline capsule sm" style="margin-top: 1rem;"><i class="fa-solid fa-download"></i> โหลดรูป</button>
+                </div>
                 <div class="detail-links">
                     <label>ลิงก์ที่ย่อแล้ว:</label>
-                    <a href="#" id="hist-short" class="highlight-link" target="_blank"></a>
+                    <div class="hist-link-box">
+                        <a href="#" id="hist-short" class="highlight-link" target="_blank"></a>
+                        <button id="copy-hist-short" class="btn-copy capsule sm-copy" title="คัดลอก"><i class="fa-regular fa-copy"></i></button>
+                    </div>
                     <label>ลิงก์ต้นฉบับ:</label>
-                    <a href="#" id="hist-original" class="dim-link" target="_blank"></a>
+                    <div class="hist-link-box">
+                        <a href="#" id="hist-original" class="dim-link" target="_blank"></a>
+                        <button id="copy-hist-original" class="btn-copy capsule sm-copy" title="คัดลอก"><i class="fa-regular fa-copy"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
