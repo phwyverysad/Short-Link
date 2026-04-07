@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const shortUrl = await callShortenerAPI(provider, url, isCustom ? alias : null);
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=${encodeURIComponent(shortUrl)}`;
+            const qrUrl = `https://quickchart.io/qr?size=400&margin=1&text=${encodeURIComponent(shortUrl)}`;
 
             shortUrlDisplay.href = shortUrl;
             shortUrlDisplay.textContent = shortUrl;
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('hist-original').href = item.orig;
                 document.getElementById('hist-short').textContent = item.short;
                 document.getElementById('hist-short').href = item.short;
-                document.getElementById('hist-qr').src = item.qr;
+                document.getElementById('hist-qr').src = `https://quickchart.io/qr?size=400&margin=1&text=${encodeURIComponent(item.short)}`;
                 historyList.classList.add('hidden');
                 historyDetail.classList.remove('hidden');
             };
